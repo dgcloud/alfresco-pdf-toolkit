@@ -124,6 +124,9 @@ public class PDFToolkitServiceImpl extends PDFToolkitConstants implements PDFToo
             pdf = PDDocument.load(is);
             pdfTarget = PDDocument.load(tis);
             
+            decryptPdf(pdf);
+            decryptPdf(pdfTarget);
+            
             // Append the PDFs
             PDFMergerUtility merger = new PDFMergerUtility();
             merger.appendDocument(pdfTarget, pdf);
@@ -219,6 +222,20 @@ public class PDFToolkitServiceImpl extends PDFToolkitConstants implements PDFToo
         
         return destinationNode;
     }
+
+	private void decryptPdf(PDDocument pdf) {
+		// if the document is encrypted, try to remove its protection by using the "" (EMPTY) password 
+		// as an attempt before failing during the append operation
+		if(pdf.isEncrypted()) {
+			try {
+		        pdf.decrypt("");
+		        pdf.setAllSecurityToBeRemoved(true);
+		    }
+		    catch (Exception e) {
+		    	throw new AlfrescoRuntimeException("The document is encrypted, and we can't decrypt it.", e);
+		    }
+		}
+	}
     
 	@Override
 	public NodeRef encryptPDF(NodeRef targetNodeRef, Map<String, Serializable> params) 
