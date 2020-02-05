@@ -53,6 +53,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.pdfbox.multipdf.PDFMergerUtility;
 import org.apache.pdfbox.multipdf.Splitter;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.encryption.InvalidPasswordException;
 import org.springframework.extensions.surf.util.I18NUtil;
 
 import com.itextpdf.text.Document;
@@ -125,8 +126,8 @@ public class PDFToolkitServiceImpl extends PDFToolkitConstants implements PDFToo
             pdf = PDDocument.load(is);
             pdfTarget = PDDocument.load(tis);
             
-            decryptPdf(pdf);
-            decryptPdf(pdfTarget);
+            pdf = decryptPdf(pdfTarget, is);
+            pdfTarget = decryptPdf(pdfTarget, tis);
             
             // Append the PDFs
             PDFMergerUtility merger = new PDFMergerUtility();
@@ -220,18 +221,15 @@ public class PDFToolkitServiceImpl extends PDFToolkitConstants implements PDFToo
         return destinationNode;
     }
 
-	private void decryptPdf(PDDocument pdf) {
+	private PDDocument decryptPdf(PDDocument pdf, InputStream tis) throws IOException, InvalidPasswordException {
 		// if the document is encrypted, try to remove its protection by using the "" (EMPTY) password 
 		// as an attempt before failing during the append operation
 		if(pdf.isEncrypted()) {
-			try {
-		        pdf.decrypt("");
-		        pdf.setAllSecurityToBeRemoved(true);
-		    }
-		    catch (Exception e) {
-		    	throw new AlfrescoRuntimeException("The document is encrypted, and we can't decrypt it.", e);
-		    }
+			pdf.close();
+			pdf = PDDocument.load(tis, "");
+			pdf.setAllSecurityToBeRemoved(true);
 		}
+		return pdf;
 	}
     
 	@Override
