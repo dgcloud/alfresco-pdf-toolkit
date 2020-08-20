@@ -126,7 +126,7 @@ public class PDFToolkitServiceImpl extends PDFToolkitConstants implements PDFToo
             pdf = PDDocument.load(is);
             pdfTarget = PDDocument.load(tis);
             
-            pdf = decryptPdf(pdfTarget, is);
+            pdf = decryptPdf(pdf, is);
             pdfTarget = decryptPdf(pdfTarget, tis);
             
             // Append the PDFs
